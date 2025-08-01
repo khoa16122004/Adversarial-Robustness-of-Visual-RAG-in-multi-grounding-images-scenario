@@ -24,8 +24,8 @@ This repository focuses on adversarial robustness testing for Visual-RAG in mult
 ### `attack`
 Contains scripts and models for adversarial attack algorithms.
 - `algorithm.py`: Implements the NSGA-II algorithm for adversarial optimization.
-- `reader.py`: Handles input data processing.
-- `retriever.py`: Implements retrieval models.
+- `reader.py`: Inplements Large VLMs.
+- `retriever.py`: Implements Vision-language retrieval models.
 - `run_attack.py`: Main script to execute adversarial attacks.
 - `util.py`: Utility functions for attack-related tasks.
 - `lvlm_models/`: Contains specific models like `deepseekvl2.py`, `llava_.py`, and `qwenvl2_5.py`.
@@ -54,13 +54,11 @@ python attack/run_attack.py \
     --w 312 \
     --h 312 \
     --pop_size 20 \
-    --mutation_rate 0.1 \
     --F 0.5 \
     --n_k 1 \
     --max_iter 100 \
-    --std 0.1 \
+    --std 0.05 \
     --start_idx 0 \
-    --using_question 1
 ```
 
 ### Visualization
@@ -68,7 +66,7 @@ Run the `visualize_l_d_topij.py` script with the following arguments:
 ```bash
 python visualization/visualize_l_d_topij.py \
     --sample_path <path_to_sample_ids_file> \
-    --std 0.1 \
+    --std 0.05 \
     --attack_result_dir <path_to_attack_results_directory>
 ```
 
@@ -78,3 +76,6 @@ Results will be saved in the respective directories based on the script configur
 ## References
 - [Visual-RAG GitHub Repository](https://github.com/visual-rag/visual-rag)
 - [iNat21 Dataset](https://github.com/visipedia/inat_comp/tree/master/2021)
+
+## Acknowledgments
+Special thanks to the [pymoo](https://pymoo.org/) library for providing tools to implement multi-objective optimization algorithms like NSGA-II.
