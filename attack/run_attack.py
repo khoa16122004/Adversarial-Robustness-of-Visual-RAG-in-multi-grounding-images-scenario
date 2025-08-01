@@ -19,7 +19,7 @@ def main(args):
                          )
     
     # result_dir
-    result_dir = f"attack_result_usingquestion={args.using_question}"
+    result_dir = f"attack_results"
     os.makedirs(result_dir, exist_ok=True)
     
     # sample_path
@@ -68,7 +68,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample_path", type=str)
-    parser.add_argument("--result_clean_dir", type=str, required=True)
+    parser.add_argument("--retrieval_result_dir", type=str, required=True)
     parser.add_argument("--reader_name", type=str, default="llava")
     parser.add_argument("--retriever_name", type=str, default="clip")
     parser.add_argument("--w", type=int, default=312, help="Width to resize images")
@@ -80,7 +80,6 @@ if __name__ == "__main__":
     parser.add_argument("--max_iter", type=int, default=100, help="Maximum iterations")
     parser.add_argument("--std", type=float, default=0.1, help="Standard deviation for initialization")
     parser.add_argument("--start_idx", type=int, default=0)
-    parser.add_argument("--using_question", type=int, default=1) # 1 là sử dụng question để query
     
     args = parser.parse_args()  
     main(args)
