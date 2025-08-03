@@ -181,7 +181,6 @@ python run_score_for_each_topk.py \
 - Requires OpenAI API key in `.envs` file
 - Uses GPT-4 for semantic evaluation
 - Customizable prompts in `util.py`
-- Evaluates both retrieval and generation impact
 ## Output Structure
 
 ### 1. Retrieval Results
@@ -206,27 +205,14 @@ attack_results/
         │   # Shows applied perturbations
         │   # Useful for visual analysis
         │
-        ├── scores_top<k>.pkl           # Performance metrics
-        │   # Contains:
-        │   # - Retrieval similarity scores
-        │   # - Generation differences
-        │   # - Optimization metrics
+        ├── scores_top<k>.pkl           # Optimization proccess
+        │   # Optimization metrics accross generation steps
         │
         └── answer_top<k>.json          # Attack outcomes
             # Includes:
             # - Original RAG output
             # - Adversarial RAG output
-            # - Semantic difference scores
-```
-
-### 3. Evaluation Results
-Generated in the attack results directory after running evaluation:
-```
-attack_results/
-└── evaluation/
-    ├── metrics_summary.json            # Overall performance metrics
-    ├── per_sample_results/             # Individual sample analyses
-    └── visualizations/                 # Performance plots
+            # - End-to-End@top-k score
 ```
 
 ## References
@@ -235,10 +221,4 @@ attack_results/
 - [Visual-RAG: Foundation Model for Visual Information Retrieval](https://github.com/visual-rag/visual-rag)
 - [NSGA-II: A Fast and Elitist Multiobjective Genetic Algorithm](https://ieeexplore.ieee.org/document/996017)
 - [iNat21 Dataset and Competition](https://github.com/visipedia/inat_comp/tree/master/2021)
-
-### Models and Tools
-- [LLaVA: Large Language and Vision Assistant](https://llava-vl.github.io)
-- [DeepSeek-VL](https://github.com/deepseek-ai/DeepSeek-VL)
-- [Qwen-VL](https://github.com/QwenLM/Qwen-VL)
-- [CLIP](https://github.com/openai/CLIP)
 - [pymoo: Multi-objective Optimization](https://pymoo.org/) 
