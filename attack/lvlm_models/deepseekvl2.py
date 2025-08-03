@@ -106,30 +106,3 @@ class DeepSeekVL2:
         
 
 
-def add_gaussian_noise(img, std=0.1):
-    transform_to_tensor = T.ToTensor()
-    transform_to_pil = T.ToPILImage()
-
-    tensor_img = transform_to_tensor(img)
-    noise = torch.randn(tensor_img.size()) * std
-    noisy_img = tensor_img + noise
-    noisy_img = torch.clamp(noisy_img, 0, 1)
-
-    return transform_to_pil(noisy_img)
-
-if __name__ == "__main__":
-    question = "Discribe these images. <image><image><image>"
-    img_files = [Image.open(f"test_{i + 1}.jpg").convert("RGB") for i in range(3)]
-
-    lvlm = DeepSeekVL2("deepseek-vl2-tiny")
-    answer = lvlm(question, img_files)
-    print(lvlm.compute_log_prob(question, img_files, answer[0]))
-    print(answer)
-
-    # Add noise
-    std = 100  # Bạn có thể thử các giá trị như 0.05, 0.1, 0.2
-    noisy_imgs = [add_gaussian_noise(img, std=std) for img in img_files]
-    [noisy_img.save(f"test_{i + 1}_noisy.jpg") for i, noisy_img in enumerate(noisy_imgs)]
-    adv_answer = lvlm(question, noisy_imgs)
-    print(adv_answer)
-    print(lvlm.compute_log_prob(question, noisy_imgs, answer[0]))
