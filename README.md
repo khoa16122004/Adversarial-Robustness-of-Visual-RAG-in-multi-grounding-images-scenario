@@ -68,7 +68,7 @@ pip install -r llava_qwen_env_requirements.txt
 ### 2. Dataset Preparation
 1. Download iNat21 training dataset images
 2. Get annotation files from Visual RAG repository
-
+3. `run.txt` file in the main folder lists the 100 samples used in this study.
 ## Usage Guide
 
 ### 1. Retrieval Phase Setup
