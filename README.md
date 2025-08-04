@@ -5,8 +5,7 @@
 
 
 ## Prerequisites
-1. Install Conda if not already installed. You can download it from [Conda Official Website](https://docs.conda.io/en/latest/miniconda.html).
-2. Create separate Conda environments for the required packages:
+Create separate Conda environments for the required packages:
    - For `deepseekvl2`:
      ```bash
      conda create -n deepseekvl2_env python=3.10
