@@ -66,7 +66,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample_path", type=str)
-    parser.add_argument("--result_clean_dir", type=str, required=True)
+    parser.add_argument("--retrieval_result_dir", type=str, required=True)
     parser.add_argument("--reader_name", type=str, default="llava")
     parser.add_argument("--retriever_name", type=str, default="clip")
     parser.add_argument("--w", type=int, default=312, help="Width to resize images")
