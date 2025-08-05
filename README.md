@@ -1,23 +1,6 @@
 # Adversarial Robustness in Visual RAG: Exploring Multi-Image Grounding with Top-k Retrieval
 
 
-
-
-## Prerequisites
-Create separate Conda environments for the required packages:
-   - For `deepseekvl2`:
-     ```bash
-     conda create -n deepseekvl2_env python=3.10
-     conda activate deepseekvl2_env
-     pip install -r deepseekvl2_requirements.txt
-     ```
-   - For `llava_qwen_env`:
-     ```bash
-     conda create -n llava_qwen_env python=3.10
-     conda activate llava_qwen_env
-     pip install -r llava_qwen_env_requirements.txt
-     ```
-
 ## Project Structure
 
 ### Core Components
