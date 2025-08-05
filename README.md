@@ -130,12 +130,12 @@ Example metadata.json structure:
 }
 ```
 
-### 2. Adversarial Attack Generation
+### 2. SPAS Attack Implementation Guide
 
-After the retrieval phase, generate adversarial examples:
+Navigate to the `attack` folder and execute the following commands:
+#### Multi-Objective Attack (MOA) using NSGA-II
 
-```bash
-cd attack
+```python
 
 # Run NSGA-II based attack
 python run_attack.py \
@@ -151,10 +151,48 @@ python run_attack.py \
     --std 0.05                             # Perturbation magnitude
 ```
 
-**Important Notes:**
-- To attack position k, results for positions 1 to k-1 must exist
-- Higher `std` values create stronger but more visible perturbations
-- Adjust `pop_size` and `max_iter` to balance optimization quality and time
+
+#### Baseline GA attack with weighted sum approach (0.5 for each objective)
+
+```python
+
+# Run baseline GA attack
+python run_baseline_ga_attack \
+    --sample_path samples.txt \              # Sample IDs to attack
+    --retrieval_result_dir clean_retrieval_result \ # Clean retrieval results directory
+    --reader_name llava-one \               # Model options: llava-one, deepseekvl2, qwenvl2.5
+    --retriever_name clip \                 # Model options: clip, blip
+    --w 312 --h 312 \                      # Image dimensions
+    --pop_size 20 \                        # NSGA-II population size
+    --F 0.9 \                              # Mutation weight
+    --n_k 1 \                              # Target position to attack (top-k)
+    --max_iter 100 \                       # Maximum iterations
+    --std 0.05                             # Perturbation magnitude
+```
+
+#### Baseline Zero-shot Perturbation Attack
+
+```python
+
+# Run NSGA-II based attack
+python run_baseline_random_attack.py \
+    --sample_path samples.txt \              # Sample IDs to attack
+    --retrieval_result_dir clean_retrieval_result \ # Clean retrieval results directory
+    --reader_name llava-one \               # Model options: llava-one, deepseekvl2, qwenvl2.5
+    --retriever_name clip \                 # Model options: clip, blip
+    --w 312 --h 312 \                      # Image dimensions
+    --pop_size 20 \                        # NSGA-II population size
+    --F 0.9 \                              # Mutation weight
+    --n_k 1 \                              # Target position to attack (top-k)
+    --max_iter 100 \                       # Maximum iterations
+    --std 0.05                             # Perturbation magnitude
+```
+
+
+
+
+
+**Important Notes:** To attack position k, results for positions 1 to k-1 must exist
 
 ### 3. Attack Evaluation
 
@@ -169,17 +207,44 @@ python run_score_for_each_topk.py \
     --attack_result_path attack_results \  # Attack results directory
     --result_clean_dir clean_results \     # Clean results directory
     --sample_path run.txt \               # Sample IDs to evaluate
-    --using_question 1 \                  # Use question-based evaluation
     --method nsga2 \                      # Attack method used
     --llm gpt \                           # LLM for evaluation
     --target_answer golden_answer \       # Reference answers
     --mode all                            # Evaluation mode
 ```
 
-**Evaluation Notes:**
+**Important Notes:**
 - Requires OpenAI API key in `.envs` file
 - Uses GPT-4 for semantic evaluation
 - Customizable prompts in `util.py`
+
+
+### 4. Visualization
+In the `attack` directory, run the following commands to visualize the results:
+
+### Confusion Matrix Visualization
+
+Visualize the confusion matrix showing the effect of SPAS attack on each top-k grounding images in visual RAG:
+
+```python
+python visualize_endscore_accross_topk.py
+```
+
+
+**Important Note:** Must run ``run_score_for_each_topk.py`` first to generate the end-to-end evaluation scores.
+
+### Optimization Process Visualization
+Visualize the optimization process during the attack (just apply for MOA and GA):
+
+```python
+python visualize_attack_process.py \
+    --sample_path samples.txt \
+    --std 0.05 \
+    --attack_result_dir attack_results \
+    --method nsga2 \
+    --max_iter 100
+```
+
 ## Output Structure
 
 ### 1. Retrieval Results

@@ -9,7 +9,7 @@ from tqdm import tqdm
 from config import Config
 import json
 
-class NSGAII:
+class NSGAII: # (main proposed in SPAS pipeline Multi-objective Attack MOA)
     def __init__(self, 
                  population_size, 
                  mutation_rate, 
@@ -226,3 +226,231 @@ class NSGAII:
             if len(survivors) >= self.population_size:
                 break
         return survivors, fronts
+    
+    
+    
+
+class GA: # Baseline GA that combined 2 objective in to single objective by using weighted sum
+    def __init__(self, 
+                 population_size, 
+                 mutation_rate, 
+                 F, 
+                 w, 
+                 h,
+                 max_iter, 
+                 fitness, # multi score
+                 std,
+                 sample_id,
+                 log_dir,
+                 n_k,
+                 ):
+        self.population_size = population_size
+        self.mutation_rate = mutation_rate
+        self.F = F
+        self.w = w
+        self.h = h
+        self.max_iter = max_iter
+        self.fitness = fitness  # function
+        self.std = std
+        self.nds = NonDominatedSorting()
+        self.sample_id = sample_id
+        self.log_dir = os.path.join(log_dir, f"{self.fitness.retriever_name}_{self.fitness.reader_name}_{self.std}", str(self.sample_id))
+        self.n_k = n_k
+        os.makedirs(self.log_dir, exist_ok=True)
+
+
+
+    def solve(self):
+        P = torch.rand(self.population_size, 3, self.w, self.h).cuda() * self.std
+        P_retri_score, P_reader_score, P_adv_imgs = self.fitness(P)
+        
+        self.history = []
+        self.img_history = []
+        for iter in tqdm(range(self.max_iter)):
+            r1, r2, r3 = [], [], []
+            for i in range(self.population_size):
+                choices = [idx for idx in range(self.population_size) if idx != i]
+                selected = random.sample(choices, 3)
+                r1.append(selected[0])
+                r2.append(selected[1])
+                r3.append(selected[2])
+
+            r1 = torch.tensor(r1, dtype=torch.long, device="cuda")
+            r2 = torch.tensor(r2, dtype=torch.long, device="cuda")
+            r3 = torch.tensor(r3, dtype=torch.long, device="cuda")
+            
+            x1 = deepcopy(P[r1])
+            x2 = deepcopy(P[r2])
+            x3 = deepcopy(P[r3])
+
+            # print(x1.shape, x2.shape, x3.shape)
+            
+            v = x1 + self.F * (x2 - x3)
+            O = torch.clamp(v, -self.std, self.std)
+
+
+            O_retri_score, O_reader_score, O_adv_imgs = self.fitness(O)
+            
+            # pool
+            pool = torch.cat([P, O], dim=0)  # (population_size, 2, ...)
+            pool_retri_score = np.concatenate([P_retri_score, O_retri_score], axis=0)  # (population_size, 2)
+            pool_reader_score = np.concatenate([P_reader_score, O_reader_score], axis=0)  # (population_size, 2)
+            pool_fitness = np.column_stack((pool_retri_score, pool_reader_score))  # (population_size, 2)
+            pool_adv_imgs = P_adv_imgs + O_adv_imgs
+         
+         
+            # NSGA-II selection
+            selected_indices = self.tournament_selection(pool_fitness)
+            P_retri_score = pool_retri_score[selected_indices]
+            P_reader_score = pool_reader_score[selected_indices]
+            P = pool[selected_indices]
+            P_adv_imgs = [pool_adv_imgs[i] for i in selected_indices]
+            
+            mean_pool_fitness = np.mean(np.column_stack((pool_retri_score, pool_reader_score)), axis=1)
+            best_idx_in_pool = np.argmin(mean_pool_fitness )
+
+            self.best_retri_score = pool_retri_score[best_idx_in_pool:best_idx_in_pool+1]
+            self.best_reader_score = pool_reader_score[best_idx_in_pool:best_idx_in_pool+1]
+
+            # print((self.best_reader_score + self.best_retri_score) / 2)
+            
+            self.history.append(np.column_stack([P_retri_score, P_reader_score]))
+            self.img_history.append(P_adv_imgs)
+            
+        
+        self.save_logs()
+            
+    def save_logs(self):
+        score_log_file = os.path.join(self.log_dir, f"scores_{self.n_k}.pkl") 
+        adv_img_file = os.path.join(self.log_dir, f"adv_{self.n_k}.pkl")
+        answer_file = os.path.join(self.log_dir, f"answers_{self.n_k}.json")
+        adv_history_file = os.path.join(self.log_dir, f"adv_history_{self.n_k}.pkl")
+
+        # inference
+        final_selection_adv_img, retri_success = self.final_selection()
+        adv_answer = self.fitness.reader.image_to_text(
+            qs=self.fitness.question,
+            img_files=self.fitness.top_adv_imgs + [final_selection_adv_img]
+        )[0]
+        answers = {
+            "golden_answer": self.fitness.answer,
+            "adv_answer": adv_answer,
+            "retri_success": retri_success
+        }
+        
+        with open(answer_file, "w") as f:
+            json.dump(answers, f, indent=4)
+        
+        with open(adv_img_file, 'wb') as f:
+            pickle.dump(final_selection_adv_img, f)
+
+        with open(score_log_file, 'wb') as f:
+            pickle.dump(self.history, f)
+            
+        with open(adv_history_file, 'wb') as f:
+            pickle.dump(self.img_history, f)
+    
+    def final_selection(self):
+        
+        valid_indices = np.where(self.best_retri_score < 1)[0]
+        if len(valid_indices) > 0:
+            best_idx = valid_indices[np.argmin(self.best_reader_score[valid_indices])]
+            success_full = True
+        else:
+            success_full = False
+            best_idx = np.argmin(self.best_retri_score)
+        return self.img_history[-1][best_idx], success_full
+
+        
+    
+    def tournament_selection(self, pool_fitness): # 2 x 2N
+        weighted_sum_fitness = np.mean(pool_fitness, axis=1) # 2N
+        idxs = np.arange(len(pool_fitness))
+        selected_idxs = []
+        for turn in range(2):
+            idxs_shuffle = idxs.copy()
+            np.random.shuffle(idxs_shuffle)     
+            for i in range(0, len(pool_fitness), 4):
+                sub_idxs = idxs_shuffle[i : i + 4]
+                sub_fitness = weighted_sum_fitness[sub_idxs]
+                selected_idx = sub_idxs[np.argmin(sub_fitness)]
+                selected_idxs.append(selected_idx)
+        
+        
+        
+        return selected_idxs
+
+
+
+
+class RandomAttack: # Baseline random attack that use random pertubation instead of optimizing the adversarial examples.
+    def __init__(self, 
+                 w, 
+                 h,
+                 fitness, # multi score
+                 std,
+                 sample_id,
+                 log_dir,
+                 n_k,
+                 ):
+        self.w = w
+        self.h = h
+        self.fitness = fitness  # function
+        self.std = std
+        self.sample_id = sample_id
+        self.log_dir = os.path.join(log_dir, f"{self.fitness.retriever_name}_{self.fitness.reader_name}_{self.std}", str(self.sample_id))
+        self.n_k = n_k
+        os.makedirs(self.log_dir, exist_ok=True)
+
+
+
+
+
+    def solve(self):
+        P = torch.rand(1, 3, self.w, self.h).cuda() * self.std
+        P_retri_score, P_reader_score, P_adv_imgs = self.fitness(P)
+        self.best_retri_score = P_retri_score
+        self.best_reader_score = P_reader_score
+        self.adv_img = P_adv_imgs[0]
+        self.best_individual = P
+        self.save_logs()
+            
+    def save_logs(self):
+        score_log_file = os.path.join(self.log_dir, f"scores_{self.n_k}.pkl") 
+        invidual_log_file = os.path.join(self.log_dir, f"individuals_{self.n_k}.pkl")
+        adv_img_file = os.path.join(self.log_dir, f"adv_{self.n_k}.pkl")
+        answer_file = os.path.join(self.log_dir, f"answers_{self.n_k}.json")
+        
+        # inference
+        retri_success = self.is_retrieved()
+            
+        adv_answer = self.fitness.reader.image_to_text(
+            qs=self.fitness.question,
+            img_files=self.fitness.top_adv_imgs + [self.adv_img]
+        )[0]
+        answers = {
+            "golden_answer": self.fitness.answer,
+            "adv_answer": adv_answer,
+            "retri_success": retri_success
+        }
+        
+        with open(answer_file, "w") as f:
+            json.dump(answers, f, indent=4)
+        
+        with open(adv_img_file, 'wb') as f:
+            pickle.dump(self.adv_img, f)
+
+        with open(score_log_file, 'wb') as f:
+            pickle.dump(np.column_stack([self.best_retri_score, self.best_reader_score]), f)
+        with open(invidual_log_file, 'wb') as f:
+            pickle.dump(self.best_individual, f)
+
+
+            
+
+    
+    def is_retrieved(self):
+        if self.best_retri_score < 1 and self.best_reader_score < 1:
+            return True
+        return False
+
