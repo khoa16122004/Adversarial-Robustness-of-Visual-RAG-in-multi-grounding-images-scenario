@@ -40,8 +40,6 @@ Create separate Conda environments for the required packages:
 - `vl_models/`: Retrieval model implementations
   - `blip.py`: BLIP model interface
   - `clip_.py`: CLIP model interface
-  - `flava.py`: FLAVA model implementation
-  - `git.py`: GIT model implementation
   - `open_clip.py`: OpenCLIP adaptations
 
 
