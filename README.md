@@ -281,7 +281,6 @@ attack_results/
 
 ## References
 
-### Papers and Resources
 - [Visual-RAG: Foundation Model for Visual Information Retrieval](https://github.com/visual-rag/visual-rag)
 - [NSGA-II: A Fast and Elitist Multiobjective Genetic Algorithm](https://ieeexplore.ieee.org/document/996017)
 - [iNat21 Dataset and Competition](https://github.com/visipedia/inat_comp/tree/master/2021)
