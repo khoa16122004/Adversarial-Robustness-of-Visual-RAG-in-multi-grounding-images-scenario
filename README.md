@@ -198,7 +198,7 @@ python run_baseline_random_attack.py \
 
 Evaluate the effectiveness of generated adversarial examples:
 
-```bash
+```python
 python run_score_for_each_topk.py \
     --n_k 1 \                              # Number of injected images into the images corpus
     --retriever_name clip \                # Retriever model used
