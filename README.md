@@ -24,7 +24,7 @@ Create separate Conda environments for the required packages:
 ### Core Components
 
 #### 1. Attack Module (`/attack`)
-- `algorithm.py`: NSGA-II implementation for adversarial optimization
+- `algorithm.py`: NSGA-II, GA and Zero-shot Pertubation implementation for adversarial optimization
 - `reader.py`: Large Vision-Language Model implementations
 - `retriever.py`: Vision-language retrieval model interfaces
 - `run_attack.py`: Main attack execution script
