@@ -46,9 +46,6 @@ Create separate Conda environments for the required packages:
 ## Setup and Installation
 
 ### 1. Environment Setup
-1. Install Conda from [Conda Official Website](https://docs.conda.io/en/latest/miniconda.html)
-2. Create and configure environments:
-
 ```bash
 # For DeepSeekVL2
 conda create -n deepseekvl2_env python=3.10
@@ -109,7 +106,7 @@ Example metadata.json structure:
     "answer": [
         "yellow body with brown or red dots"
     ],
-    "keyword": "What is the color and pattern that can be found on the larval body of the carpenterworm moth (scientific name: Prionoxystus robiniae)?",
+    "keyword": "larval", // // ignore this field; it will be used in future work
     "topk_basenames": [
         "582aa998-1f3c-4ea9-915c-b483d4f5afab.jpg",
         "ac5fa8b9-05dd-4175-9dc6-dfbc23b39e78.jpg",
@@ -193,7 +190,7 @@ python run_baseline_random_attack.py \
 
 ### 3. Attack Evaluation
 
-Evaluate the effectiveness of generated adversarial examples:
+Calculate the Adversarial-Rate/MRR@top-k (just retrieval phase) and End-to-End@top-k (all Visual RAG pipeline).
 
 ```python
 python run_score_for_each_topk.py \
@@ -207,13 +204,17 @@ python run_score_for_each_topk.py \
     --method nsga2 \                      # Attack method used
     --llm gpt \                           # LLM for evaluation
     --target_answer golden_answer \       # Reference answers
-    --mode all                            # Evaluation mode
+    --mode all                            # 'all' is calculate the end-to-end#@top-k score and Adversarial-Clean/MRR@top-k, 'retrieval' just only calculate MRR@top-k
 ```
+
 
 **Important Notes:**
 - Requires OpenAI API key in `.envs` file
 - Uses GPT-4 for semantic evaluation
 - Customizable prompts in `util.py`
+
+
+
 
 
 ### 4. Visualization
@@ -278,7 +279,7 @@ attack_results/
 
 ## References
 
-- [Visual-RAG: Foundation Model for Visual Information Retrieval](https://github.com/visual-rag/visual-rag)
+- [Visual-RAG: Benchmarking Text-to-Image Retrieval Augmented Generation for Visual Knowledge Intensive Queries](https://github.com/visual-rag/visual-rag)
 - [NSGA-II: A Fast and Elitist Multiobjective Genetic Algorithm](https://ieeexplore.ieee.org/document/996017)
 - [iNat21 Dataset and Competition](https://github.com/visipedia/inat_comp/tree/master/2021)
 - [pymoo: Multi-objective Optimization](https://pymoo.org/) 
