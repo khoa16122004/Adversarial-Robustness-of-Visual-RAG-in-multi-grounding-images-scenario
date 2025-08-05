@@ -1,5 +1,4 @@
-# Adversarial Robustness of Visual-RAG in Multi-Grounding Images Scenario
-
+# Adversarial Robustness in Visual RAG: Exploring Multi-Image Grounding with Top-k Retrieval
 
 
 
