@@ -2,6 +2,7 @@
 
 
 ## Project Structure
+![pipeline](pipeline.png)
 
 ### Core Components
 
